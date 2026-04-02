@@ -77,6 +77,19 @@ export default function MatchDayClient({
         : config.keeperIds[0]
       : config.keeperIds?.[0];
 
+  // Helper: get slotLabel for each player in a given lineup at a given minute
+  function slotLabelsAt(onFieldIds: string[], atMinute: number): Map<string, string> {
+    if (!coach || !config) return new Map();
+    const activeK =
+      config.keeperIds?.length === 2
+        ? atMinute >= (keeperSwapMinute ?? Infinity)
+          ? config.keeperIds[1]
+          : config.keeperIds[0]
+        : config.keeperIds?.[0];
+    const a = assignPositions(onFieldIds, coach.players, config.formationId ?? "ingen", activeK);
+    return new Map(a.map((x) => [x.playerId, x.slotLabel]));
+  }
+
   const positionAssignments = coach
     ? assignPositions(currentOnField, coach.players, config.formationId ?? "ingen", activeKeeperId)
     : [];
@@ -300,6 +313,23 @@ export default function MatchDayClient({
               const isNext = liveView
                 ? liveView.completedEventCount === i
                 : i === 0;
+
+              // Positions before this event (who's going off)
+              const beforeLineup = i === 0
+                ? schedule.startingLineup
+                : schedule.events[i - 1].onFieldAfter;
+              const slotsBefore = slotLabelsAt(beforeLineup, evt.atMinute - 0.1);
+
+              // Positions after this event (who's coming on)
+              const slotsAfter = slotLabelsAt(evt.onFieldAfter, evt.atMinute + 0.1);
+
+              function withSlot(id: string, slotMap: Map<string, string>) {
+                const slot = slotMap.get(id);
+                return slot
+                  ? `${playerName(id)} (${slot})`
+                  : playerName(id);
+              }
+
               return (
                 <div
                   key={i}
@@ -322,11 +352,11 @@ export default function MatchDayClient({
                   </div>
                   <p className="text-zinc-300">
                     <span className="text-red-400">UT:</span>{" "}
-                    {evt.playersOff.map(playerName).join(", ")}
+                    {evt.playersOff.map((id) => withSlot(id, slotsBefore)).join(", ")}
                   </p>
                   <p className="text-zinc-300">
                     <span className="text-emerald-400">INN:</span>{" "}
-                    {evt.playersOn.map(playerName).join(", ")}
+                    {evt.playersOn.map((id) => withSlot(id, slotsAfter)).join(", ")}
                   </p>
                 </div>
               );
