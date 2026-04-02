@@ -9,6 +9,7 @@ import { formatTime } from "../_lib/utils";
 import { PositionBadge } from "./Badge";
 import type { SubEvent } from "../_lib/types";
 import { getPlayingMinutes } from "../_lib/scheduler";
+import { assignPositions, getAssignment } from "../_lib/positions";
 
 export default function MatchDayClient({
   coachId,
@@ -64,9 +65,13 @@ export default function MatchDayClient({
   const isCritical = seconds !== null && seconds <= 15;
 
   const playingMinutes = schedule ? getPlayingMinutes(schedule, config) : {};
+  const currentOnField = liveView?.onField ?? schedule.startingLineup;
+  const positionAssignments = coach
+    ? assignPositions(currentOnField, coach.players, config.formationId ?? "ingen")
+    : [];
 
   return (
-    <div className="min-h-screen px-4 py-6 max-w-md mx-auto">
+    <div className="min-h-screen bg-zinc-950 px-4 py-6 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
@@ -185,24 +190,27 @@ export default function MatchDayClient({
           <span className="text-xs text-emerald-400 font-mono">{liveView?.onField.length ?? schedule.startingLineup.length}</span>
         </div>
         <div className="space-y-1.5">
-          {(liveView?.onField ?? schedule.startingLineup).map((id) => (
-            <div
-              key={id}
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-900/60"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span className="font-medium text-sm">{playerName(id)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  {playerPositions(id).map((pos) => (
-                    <PositionBadge key={pos} pos={pos} />
-                  ))}
+          {currentOnField.map((id) => {
+            const assignment = getAssignment(id, positionAssignments);
+            return (
+              <div
+                key={id}
+                className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-900/60"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span className="font-medium text-sm">{playerName(id)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {assignment?.slotLabel && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-zinc-300 font-medium">
+                      {assignment.slotLabel}
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

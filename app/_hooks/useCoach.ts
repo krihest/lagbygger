@@ -83,5 +83,13 @@ export function useCoach(coachId: string) {
     [coach, save]
   );
 
-  return { coach, addPlayer, removePlayer, updatePlayer };
+  const renameCoach = useCallback(
+    (newName: string) => {
+      if (!coach) return;
+      save({ ...coach, name: newName });
+    },
+    [coach, save]
+  );
+
+  return { coach, addPlayer, removePlayer, updatePlayer, renameCoach };
 }

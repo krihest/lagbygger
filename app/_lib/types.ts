@@ -21,6 +21,8 @@ export interface MatchConfig {
   durationMinutes: number;
   format: MatchFormat;
   subIntervalMinutes: number;
+  subsPerRound: number;
+  formationId: string;
   playerIds: string[];
   createdAt: number;
 }

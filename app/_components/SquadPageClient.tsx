@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCoach } from "../_hooks/useCoach";
+import { useCoach, useCoaches } from "../_hooks/useCoach";
 import { PositionBadge } from "./Badge";
 import type { Position } from "../_lib/types";
 
 const ALL_POSITIONS: Position[] = ["Keeper", "Forsvar", "Midtbane", "Angrep"];
 
 export default function SquadPageClient({ coachId }: { coachId: string }) {
-  const { coach, addPlayer, removePlayer } = useCoach(coachId);
+  const { coach, addPlayer, removePlayer, renameCoach } = useCoach(coachId);
+  const { deleteCoach } = useCoaches();
   const [name, setName] = useState("");
   const [positions, setPositions] = useState<Position[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
 
   if (!coach) {
@@ -39,16 +43,71 @@ export default function SquadPageClient({ coachId }: { coachId: string }) {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 max-w-md mx-auto">
+    <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button onClick={() => router.push("/")} className="text-zinc-500 hover:text-white text-sm">
           ←
         </button>
-        <div>
-          <h1 className="text-xl font-bold">{coach.name}</h1>
+        <div className="flex-1">
+          {editingName ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (newName.trim()) renameCoach(newName.trim());
+                setEditingName(false);
+              }}
+              className="flex gap-2"
+            >
+              <input
+                autoFocus
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="flex-1 px-3 py-1.5 rounded-lg text-sm outline-none border border-emerald-500 bg-zinc-800 text-white"
+              />
+              <button type="submit" className="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-sm font-semibold">Lagre</button>
+              <button type="button" onClick={() => setEditingName(false)} className="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-sm">Avbryt</button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">{coach.name}</h1>
+              <button
+                onClick={() => { setNewName(coach.name); setEditingName(true); }}
+                className="text-zinc-600 hover:text-zinc-300 text-sm transition-colors"
+                title="Endre lagnavn"
+              >
+                ✏️
+              </button>
+            </div>
+          )}
           <p className="text-zinc-400 text-sm">{coach.players.length} spillere i troppen</p>
         </div>
+
+        {/* Delete team */}
+        {confirmDelete ? (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { deleteCoach(coachId); router.push("/"); }}
+              className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-500"
+            >
+              Slett
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-xs"
+            >
+              Avbryt
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="text-zinc-600 hover:text-red-400 text-sm transition-colors"
+            title="Slett lag"
+          >
+            🗑
+          </button>
+        )}
       </div>
 
       {/* Player list */}
@@ -96,7 +155,7 @@ export default function SquadPageClient({ coachId }: { coachId: string }) {
             placeholder="Spillerens navn"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 focus:border-emerald-500 outline-none text-sm"
+            className="w-full px-4 py-3 rounded-lg bg-zinc-800 border border-zinc-700 focus:border-emerald-500 outline-none text-sm text-white placeholder:text-zinc-500"
           />
           <div>
             <p className="text-zinc-400 text-xs mb-2">Posisjon (valgfritt)</p>

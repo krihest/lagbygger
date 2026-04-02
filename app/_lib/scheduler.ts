@@ -4,7 +4,7 @@ import { shuffleArray } from "./utils";
 export function generateSchedule(
   config: MatchConfig
 ): MatchSchedule {
-  const { id, format, durationMinutes, subIntervalMinutes, playerIds } = config;
+  const { id, format, durationMinutes, subIntervalMinutes, subsPerRound = 2, playerIds } = config;
   const n = playerIds.length;
   const f = format;
 
@@ -40,7 +40,7 @@ export function generateSchedule(
     onField.forEach((pid) => (fieldIntervals[pid] += 1));
 
     const benchSize = onBench.length;
-    const subsCount = Math.min(benchSize, f);
+    const subsCount = Math.min(benchSize, f, subsPerRound);
 
     // Players going OFF: those with most field time
     const sortedField = [...onField].sort(

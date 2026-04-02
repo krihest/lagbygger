@@ -45,7 +45,7 @@ export default function CoachListClient() {
             placeholder="Navn på trener / lag"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 focus:border-emerald-500 outline-none text-sm"
+            className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 focus:border-emerald-500 outline-none text-sm text-white placeholder:text-zinc-500"
           />
           <div className="flex gap-2">
             <button

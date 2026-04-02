@@ -18,6 +18,7 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
   const [duration, setDuration] = useState(60);
   const [format, setFormat] = useState<MatchFormat>(7);
   const [subInterval, setSubInterval] = useState(10);
+  const [subsPerRound, setSubsPerRound] = useState(2);
   const [formationId, setFormationId] = useState("2-3-1");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -46,13 +47,15 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
       durationMinutes: duration,
       format,
       subIntervalMinutes: subInterval,
+      subsPerRound,
+      formationId,
       playerIds: selectedIds,
     });
     router.push(`/${coachId}/kamp/${matchId}`);
   }
 
   return (
-    <div className="min-h-screen px-4 py-8 max-w-md mx-auto">
+    <div className="min-h-screen bg-zinc-950 px-4 py-8 max-w-md mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button onClick={() => router.push(`/${coachId}`)} className="text-zinc-500 hover:text-white text-sm">
@@ -110,7 +113,7 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
           </div>
         </div>
 
-        {/* Duration + Interval */}
+        {/* Duration + Interval + Subs per round */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs text-zinc-400 uppercase tracking-wider mb-3">
@@ -151,6 +154,28 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
                 +
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Subs per round */}
+        <div>
+          <label className="block text-xs text-zinc-400 uppercase tracking-wider mb-3">
+            Bytter per runde
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSubsPerRound((s) => Math.max(1, s - 1))}
+              className="w-10 h-10 rounded-lg bg-zinc-800 text-zinc-300 text-xl font-bold hover:bg-zinc-700 transition-colors flex items-center justify-center"
+            >
+              −
+            </button>
+            <span className="flex-1 text-center font-mono text-lg font-bold">{subsPerRound}</span>
+            <button
+              onClick={() => setSubsPerRound((s) => Math.min(format, s + 1))}
+              className="w-10 h-10 rounded-lg bg-zinc-800 text-zinc-300 text-xl font-bold hover:bg-zinc-700 transition-colors flex items-center justify-center"
+            >
+              +
+            </button>
           </div>
         </div>
 
