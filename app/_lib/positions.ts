@@ -5,6 +5,7 @@ export interface PlayerAssignment {
   playerId: string;
   slotLabel: string;
   position: Position;
+  slotIndex: number; // index into formation.slots — used for x/y lookup
 }
 
 /**
@@ -19,10 +20,11 @@ export function assignPositions(
 ): PlayerAssignment[] {
   const formation = FORMATIONS.find((f) => f.id === formationId);
   if (!formation || formation.slots.length === 0) {
-    return onFieldIds.map((id) => ({
+    return onFieldIds.map((id, i) => ({
       playerId: id,
       slotLabel: "",
       position: "Midtbane" as Position,
+      slotIndex: i,
     }));
   }
 
@@ -40,6 +42,7 @@ export function assignPositions(
         playerId: activeKeeperId,
         slotLabel: slots[keeperSlotIdx].label,
         position: slots[keeperSlotIdx].position,
+        slotIndex: keeperSlotIdx,
       });
       preUsedPlayerIds.add(activeKeeperId);
       preFilledSlotIndices.add(keeperSlotIdx);
@@ -61,21 +64,23 @@ export function assignPositions(
         p.positions.includes(slot.position)
     );
     if (match) {
-      assigned.push({ playerId: match.id, slotLabel: slot.label, position: slot.position });
+      assigned.push({ playerId: match.id, slotLabel: slot.label, position: slot.position, slotIndex: i });
       usedPlayerIds.add(match.id);
       filledSlotIndices.add(i);
     }
   }
 
   // Pass 2: fill remaining slots with unassigned players (track by index, not label)
-  const remainingSlots = slots.filter((_, i) => !filledSlotIndices.has(i));
+  const remainingSlots = slots
+    .map((s, i) => ({ ...s, i }))
+    .filter(({ i }) => !filledSlotIndices.has(i));
   const remainingPlayers = available.filter((p) => !usedPlayerIds.has(p.id));
 
   for (let i = 0; i < remainingSlots.length; i++) {
     const slot = remainingSlots[i];
     const player = remainingPlayers[i];
     if (player) {
-      assigned.push({ playerId: player.id, slotLabel: slot.label, position: slot.position });
+      assigned.push({ playerId: player.id, slotLabel: slot.label, position: slot.position, slotIndex: slot.i });
     }
   }
 

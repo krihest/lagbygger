@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMatch } from "../_hooks/useMatch";
 import { useMatchTimer } from "../_hooks/useMatchTimer";
@@ -24,7 +25,8 @@ export default function PitchViewClient({
 }) {
   const { config, schedule, state, saveState } = useMatch(matchId);
   const { coach } = useCoach(coachId);
-  const { liveView, start, pause, resume } = useMatchTimer(state, config, schedule, saveState);
+  const [simSpeed, setSimSpeed] = useState(1);
+  const { liveView, start, pause, resume, reset } = useMatchTimer(state, config, schedule, saveState, simSpeed);
   const router = useRouter();
 
   if (!config || !schedule || !state || !coach) {
@@ -60,11 +62,11 @@ export default function PitchViewClient({
     return coach?.players.find((p) => p.id === id)?.name ?? id;
   }
 
-  // Map each on-field player to their pitch coordinates
+  // Map each on-field player to their pitch coordinates using slotIndex (not label)
   const playerDots = assignments
-    .filter((a) => a.slotLabel !== "" || formation?.id === "ingen")
+    .filter((a) => formation?.id !== "ingen" || true)
     .map((a) => {
-      const slot = formation?.slots.find((s) => s.label === a.slotLabel);
+      const slot = formation?.slots[a.slotIndex];
       const x = slot?.x ?? 50;
       const y = slot?.y ?? 50;
       const color = POSITION_COLORS[a.position] ?? "#71717a";
@@ -204,29 +206,55 @@ export default function PitchViewClient({
       )}
 
       {/* Controls */}
-      <div className="px-4 pb-6 pt-3 flex gap-3">
-        {!hasStarted ? (
+      <div className="px-4 pb-6 pt-3 space-y-3">
+        <div className="flex gap-3">
+          {!hasStarted ? (
+            <button
+              onClick={start}
+              className="flex-1 py-3 rounded-xl bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-colors"
+            >
+              ▶ Start kamp
+            </button>
+          ) : state.isPaused ? (
+            <button
+              onClick={resume}
+              className="flex-1 py-3 rounded-xl bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-colors"
+            >
+              ▶ Fortsett
+            </button>
+          ) : (
+            <button
+              onClick={pause}
+              className="flex-1 py-3 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold hover:bg-amber-500/30 transition-colors"
+            >
+              ⏸ Pause
+            </button>
+          )}
           <button
-            onClick={start}
-            className="flex-1 py-3 rounded-xl bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-colors"
+            onClick={reset}
+            className="px-4 py-3 rounded-xl bg-zinc-800 text-zinc-300 font-bold hover:bg-zinc-700 transition-colors"
           >
-            ▶ Start kamp
+            ↺
           </button>
-        ) : state.isPaused ? (
-          <button
-            onClick={resume}
-            className="flex-1 py-3 rounded-xl bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-colors"
-          >
-            ▶ Fortsett
-          </button>
-        ) : (
-          <button
-            onClick={pause}
-            className="flex-1 py-3 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold hover:bg-amber-500/30 transition-colors"
-          >
-            ⏸ Pause
-          </button>
-        )}
+        </div>
+
+        {/* Simulation speed */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-zinc-500">Hastighet:</span>
+          {[1, 10, 60, 120].map((speed) => (
+            <button
+              key={speed}
+              onClick={() => setSimSpeed(speed)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                simSpeed === speed
+                  ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+              }`}
+            >
+              {speed === 1 ? "1×" : speed === 120 ? "120× (sim)" : `${speed}×`}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

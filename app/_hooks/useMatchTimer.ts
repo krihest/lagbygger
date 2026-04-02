@@ -64,7 +64,8 @@ export function useMatchTimer(
   state: MatchState | null,
   config: MatchConfig | null,
   schedule: MatchSchedule | null,
-  saveState: (s: MatchState) => void
+  saveState: (s: MatchState) => void,
+  simulationSpeed: number = 1
 ) {
   const [liveView, setLiveView] = useState<LiveMatchView | null>(null);
   const stateRef = useRef(state);
@@ -75,14 +76,20 @@ export function useMatchTimer(
 
     const tick = () => {
       const s = stateRef.current;
-      if (!s) return;
-      setLiveView(computeLiveView(s, config, schedule, Date.now()));
+      if (!s || s.startedAt === null) {
+        setLiveView(computeLiveView(s ?? state, config, schedule, Date.now()));
+        return;
+      }
+      // Scale elapsed wall-clock time by simulationSpeed
+      const realElapsed = Date.now() - s.startedAt;
+      const virtualNow = s.startedAt + realElapsed * simulationSpeed;
+      setLiveView(computeLiveView(s, config, schedule, virtualNow));
     };
 
     tick();
-    const id = setInterval(tick, 500);
+    const id = setInterval(tick, 100); // faster tick for smooth simulation
     return () => clearInterval(id);
-  }, [config, schedule, state?.isPaused, state?.startedAt]);
+  }, [config, schedule, state?.isPaused, state?.startedAt, simulationSpeed]);
 
   const start = useCallback(() => {
     if (!state) return;
