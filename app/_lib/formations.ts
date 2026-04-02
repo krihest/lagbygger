@@ -75,6 +75,21 @@ export const FORMATIONS: Formation[] = [
     ],
   },
   {
+    id: "2-2-2",
+    name: "2-2-2",
+    format: 7,
+    description: "Balansert — to angripere",
+    slots: [
+      { position: "Keeper", label: "Keeper" },
+      { position: "Forsvar", label: "Forsvar" },
+      { position: "Forsvar", label: "Forsvar" },
+      { position: "Midtbane", label: "Midtbane" },
+      { position: "Midtbane", label: "Midtbane" },
+      { position: "Angrep", label: "Spiss" },
+      { position: "Angrep", label: "Spiss" },
+    ],
+  },
+  {
     id: "ingen",
     name: "Ingen formasjon",
     format: 0,
