@@ -52,6 +52,7 @@ export function assignPositions(
 
   // Pass 1: assign players who have that position preference to a matching slot
   for (let i = 0; i < slots.length; i++) {
+    if (filledSlotIndices.has(i)) continue; // skip slots pre-assigned (e.g. active keeper)
     const slot = slots[i];
     const match = available.find(
       (p) =>
