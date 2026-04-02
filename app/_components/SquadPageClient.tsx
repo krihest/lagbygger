@@ -9,7 +9,7 @@ import type { Position } from "../_lib/types";
 const ALL_POSITIONS: Position[] = ["Keeper", "Forsvar", "Midtbane", "Angrep"];
 
 export default function SquadPageClient({ coachId }: { coachId: string }) {
-  const { coach, addPlayer, removePlayer, renameCoach } = useCoach(coachId);
+  const { coach, addPlayer, removePlayer, updatePlayer, renameCoach } = useCoach(coachId);
   const { deleteCoach } = useCoaches();
   const [name, setName] = useState("");
   const [positions, setPositions] = useState<Position[]>([]);
@@ -17,7 +17,29 @@ export default function SquadPageClient({ coachId }: { coachId: string }) {
   const [editingName, setEditingName] = useState(false);
   const [newName, setNewName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+  const [editPlayerName, setEditPlayerName] = useState("");
+  const [editPlayerPositions, setEditPlayerPositions] = useState<Position[]>([]);
   const router = useRouter();
+
+  function startEditPlayer(id: string, currentName: string, currentPositions: Position[]) {
+    setEditingPlayerId(id);
+    setEditPlayerName(currentName);
+    setEditPlayerPositions(currentPositions);
+  }
+
+  function toggleEditPosition(pos: Position) {
+    setEditPlayerPositions((prev) =>
+      prev.includes(pos) ? prev.filter((p) => p !== pos) : [...prev, pos]
+    );
+  }
+
+  function handleUpdatePlayer(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingPlayerId || !editPlayerName.trim()) return;
+    updatePlayer(editingPlayerId, editPlayerName.trim(), editPlayerPositions);
+    setEditingPlayerId(null);
+  }
 
   if (!coach) {
     return (
@@ -117,33 +139,92 @@ export default function SquadPageClient({ coachId }: { coachId: string }) {
             Ingen spillere ennå. Legg til spillere for å begynne.
           </p>
         )}
-        {coach.players.map((p, i) => (
-          <div
-            key={p.id}
-            className="flex items-center justify-between px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-zinc-600 text-sm w-5 text-right">{i + 1}</span>
+        {coach.players.map((p, i) =>
+          editingPlayerId === p.id ? (
+            <form
+              key={p.id}
+              onSubmit={handleUpdatePlayer}
+              className="bg-zinc-900 border border-emerald-500/50 rounded-xl p-4 space-y-3"
+            >
+              <input
+                autoFocus
+                type="text"
+                value={editPlayerName}
+                onChange={(e) => setEditPlayerName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 focus:border-emerald-500 outline-none text-sm text-white"
+              />
               <div>
-                <p className="font-medium text-sm">{p.name}</p>
-                {p.positions.length > 0 && (
-                  <div className="flex gap-1 mt-1 flex-wrap">
-                    {p.positions.map((pos) => (
-                      <PositionBadge key={pos} pos={pos} />
-                    ))}
-                  </div>
-                )}
+                <p className="text-zinc-400 text-xs mb-2">Posisjon (valgfritt)</p>
+                <div className="flex gap-2 flex-wrap">
+                  {ALL_POSITIONS.map((pos) => (
+                    <button
+                      key={pos}
+                      type="button"
+                      onClick={() => toggleEditPosition(pos)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        editPlayerPositions.includes(pos)
+                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                          : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                      }`}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-2 rounded-lg bg-emerald-500 text-black font-semibold text-sm hover:bg-emerald-400 transition-colors"
+                >
+                  Lagre
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingPlayerId(null)}
+                  className="px-4 py-2 rounded-lg bg-zinc-800 text-zinc-300 text-sm hover:bg-zinc-700 transition-colors"
+                >
+                  Avbryt
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div
+              key={p.id}
+              className="flex items-center justify-between px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-zinc-600 text-sm w-5 text-right">{i + 1}</span>
+                <div>
+                  <p className="font-medium text-sm">{p.name}</p>
+                  {p.positions.length > 0 && (
+                    <div className="flex gap-1 mt-1 flex-wrap">
+                      {p.positions.map((pos) => (
+                        <PositionBadge key={pos} pos={pos} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => startEditPlayer(p.id, p.name, p.positions)}
+                  className="text-zinc-600 hover:text-zinc-200 px-2 py-1 rounded transition-colors text-sm"
+                  aria-label="Rediger spiller"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => removePlayer(p.id)}
+                  className="text-zinc-600 hover:text-red-400 text-lg px-2 transition-colors"
+                  aria-label="Fjern spiller"
+                >
+                  ×
+                </button>
               </div>
             </div>
-            <button
-              onClick={() => removePlayer(p.id)}
-              className="text-zinc-600 hover:text-red-400 text-lg px-2 transition-colors"
-              aria-label="Fjern spiller"
-            >
-              ×
-            </button>
-          </div>
-        ))}
+          )
+        )}
       </div>
 
       {/* Add player form */}
