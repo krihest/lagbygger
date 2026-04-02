@@ -146,35 +146,31 @@ export default function PitchViewClient({
             const cx = (dot.x / 100) * 280 + 10;
             const cy = (dot.y / 100) * 400 + 10;
             const isKeeper = dot.label === "Keeper";
+            const r = isKeeper ? 16 : 14;
             return (
               <g key={dot.playerId}>
                 {/* Shadow */}
-                <circle cx={cx + 1} cy={cy + 1} r={isKeeper ? 18 : 16}
-                  fill="rgba(0,0,0,0.3)" />
+                <circle cx={cx + 1} cy={cy + 1} r={r}
+                  fill="rgba(0,0,0,0.35)" />
                 {/* Circle */}
-                <circle cx={cx} cy={cy} r={isKeeper ? 18 : 16}
+                <circle cx={cx} cy={cy} r={r}
                   fill={dot.color} stroke="white" strokeWidth={isKeeper ? 2.5 : 2} />
-                {/* Position label inside */}
+                {/* Player name outside circle — pill below */}
+                <rect
+                  x={cx - 28} y={cy + r + 3}
+                  width={56} height={14}
+                  rx={7}
+                  fill="rgba(0,0,0,0.65)"
+                />
                 <text
-                  x={cx} y={cy - 2}
+                  x={cx} y={cy + r + 10}
                   textAnchor="middle" dominantBaseline="middle"
-                  fontSize={isKeeper ? "7" : "6.5"}
-                  fontWeight="bold"
+                  fontSize="10"
+                  fontWeight="600"
                   fill="white"
                   style={{ userSelect: "none" }}
                 >
-                  {dot.label.length > 6 ? dot.label.slice(0, 5) + "…" : dot.label}
-                </text>
-                {/* Player name below */}
-                <text
-                  x={cx} y={cy + 10}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize="6"
-                  fill="white"
-                  opacity="0.9"
-                  style={{ userSelect: "none" }}
-                >
-                  {dot.name.length > 8 ? dot.name.slice(0, 7) + "…" : dot.name}
+                  {dot.name.length > 9 ? dot.name.slice(0, 8) + "…" : dot.name}
                 </text>
               </g>
             );
