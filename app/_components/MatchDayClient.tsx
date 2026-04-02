@@ -110,6 +110,12 @@ export default function MatchDayClient({
         <span className="text-xs text-zinc-500 font-mono">
           {liveView ? formatTime(liveView.elapsedSeconds) : "00:00"}
         </span>
+        <button
+          onClick={() => router.push(`/${coachId}/kamp/${matchId}/bane`)}
+          className="text-xs text-zinc-400 hover:text-white border border-zinc-700 hover:border-zinc-500 px-2 py-1 rounded-lg transition-colors"
+        >
+          ⚽ Bane
+        </button>
       </div>
 
       {/* Keeper swap alert */}
