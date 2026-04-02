@@ -30,8 +30,9 @@ export function assignPositions(
   const available = onFieldIds.map((id) => allPlayers.find((p) => p.id === id)!).filter(Boolean);
   const assigned: PlayerAssignment[] = [];
   const usedPlayerIds = new Set<string>();
+  const filledSlotIndices = new Set<number>();
 
-  // Pass 1: assign players who have exactly that position preference to a matching slot
+  // Pass 1: assign players who have that position preference to a matching slot
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i];
     const match = available.find(
@@ -43,12 +44,12 @@ export function assignPositions(
     if (match) {
       assigned.push({ playerId: match.id, slotLabel: slot.label, position: slot.position });
       usedPlayerIds.add(match.id);
+      filledSlotIndices.add(i);
     }
   }
 
-  // Pass 2: fill remaining slots with unassigned players
-  const filledSlotLabels = new Set(assigned.map((a) => a.slotLabel));
-  const remainingSlots = slots.filter((s) => !filledSlotLabels.has(s.label));
+  // Pass 2: fill remaining slots with unassigned players (track by index, not label)
+  const remainingSlots = slots.filter((_, i) => !filledSlotIndices.has(i));
   const remainingPlayers = available.filter((p) => !usedPlayerIds.has(p.id));
 
   for (let i = 0; i < remainingSlots.length; i++) {

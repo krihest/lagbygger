@@ -31,7 +31,15 @@ export function useCoaches() {
     setCoaches(updated);
   }, []);
 
-  return { coaches, createCoach, deleteCoach };
+  const renameCoach = useCallback((id: string, newName: string) => {
+    const updated = storage.getCoaches().map((c) =>
+      c.id === id ? { ...c, name: newName } : c
+    );
+    storage.saveCoaches(updated);
+    setCoaches(updated);
+  }, []);
+
+  return { coaches, createCoach, deleteCoach, renameCoach };
 }
 
 export function useCoach(coachId: string) {
