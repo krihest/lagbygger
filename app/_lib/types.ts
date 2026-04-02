@@ -24,6 +24,7 @@ export interface MatchConfig {
   subsPerRound: number;
   formationId: string;
   playerIds: string[];
+  keeperIds: string[]; // up to 2; [0] plays first half, [1] plays second half
   createdAt: number;
 }
 

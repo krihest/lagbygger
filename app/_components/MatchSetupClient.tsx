@@ -21,6 +21,7 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
   const [subsPerRound, setSubsPerRound] = useState(2);
   const [formationId, setFormationId] = useState("2-3-1");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [keeperIds, setKeeperIds] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
 
   // Select all players by default on first render
@@ -39,6 +40,16 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
+    // Remove from keepers if deselected
+    setKeeperIds((prev) => prev.filter((k) => k !== id));
+  }
+
+  function toggleKeeper(id: string) {
+    setKeeperIds((prev) => {
+      if (prev.includes(id)) return prev.filter((k) => k !== id);
+      if (prev.length >= 2) return prev; // max 2 keepers
+      return [...prev, id];
+    });
   }
 
   function handleStart() {
@@ -50,6 +61,7 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
       subsPerRound,
       formationId,
       playerIds: selectedIds,
+      keeperIds,
     });
     router.push(`/${coachId}/kamp/${matchId}`);
   }
@@ -176,6 +188,50 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
             >
               +
             </button>
+          </div>
+        </div>
+
+        {/* Keeper selection */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-xs text-zinc-400 uppercase tracking-wider">
+              Keepere
+            </label>
+            <span className="text-xs text-zinc-500">
+              {keeperIds.length === 0
+                ? "Ingen valgt"
+                : keeperIds.length === 1
+                ? "1 valgt — velg én til"
+                : "Spiller 1. omgang / 2. omgang"}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {coach.players
+              .filter((p) => selectedIds.includes(p.id))
+              .map((p) => {
+                const idx = keeperIds.indexOf(p.id);
+                const isKeeper = idx !== -1;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => toggleKeeper(p.id)}
+                    className={`px-3 py-2 rounded-xl text-sm border transition-colors ${
+                      isKeeper
+                        ? "bg-amber-500/20 border-amber-500/50 text-amber-300 font-semibold"
+                        : keeperIds.length >= 2
+                        ? "border-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                    }`}
+                    disabled={keeperIds.length >= 2 && !isKeeper}
+                  >
+                    {isKeeper && (
+                      <span className="text-xs mr-1">{idx === 0 ? "1." : "2."}</span>
+                    )}
+                    {p.name}
+                  </button>
+                );
+              })}
           </div>
         </div>
 

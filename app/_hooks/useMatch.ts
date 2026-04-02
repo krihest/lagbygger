@@ -35,6 +35,7 @@ export function useCreateMatch(coachId: string) {
       subsPerRound: number;
       formationId: string;
       playerIds: string[];
+      keeperIds: string[];
     }): string => {
       const config: MatchConfig = {
         id: generateId(),
