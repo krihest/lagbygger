@@ -14,11 +14,11 @@ export interface PlayerAssignment {
 export function assignPositions(
   onFieldIds: string[],
   allPlayers: Player[],
-  formationId: string
+  formationId: string,
+  activeKeeperId?: string // if set, this player is assigned the keeper slot first
 ): PlayerAssignment[] {
   const formation = FORMATIONS.find((f) => f.id === formationId);
   if (!formation || formation.slots.length === 0) {
-    // No formation — return players without position assignment
     return onFieldIds.map((id) => ({
       playerId: id,
       slotLabel: "",
@@ -27,10 +27,28 @@ export function assignPositions(
   }
 
   const slots = [...formation.slots];
+
+  // If an active keeper is specified, assign them to the keeper slot before anything else
+  const preAssigned: PlayerAssignment[] = [];
+  const preUsedPlayerIds = new Set<string>();
+  const preFilledSlotIndices = new Set<number>();
+
+  if (activeKeeperId && onFieldIds.includes(activeKeeperId)) {
+    const keeperSlotIdx = slots.findIndex((s) => s.position === "Keeper");
+    if (keeperSlotIdx !== -1) {
+      preAssigned.push({
+        playerId: activeKeeperId,
+        slotLabel: slots[keeperSlotIdx].label,
+        position: slots[keeperSlotIdx].position,
+      });
+      preUsedPlayerIds.add(activeKeeperId);
+      preFilledSlotIndices.add(keeperSlotIdx);
+    }
+  }
   const available = onFieldIds.map((id) => allPlayers.find((p) => p.id === id)!).filter(Boolean);
-  const assigned: PlayerAssignment[] = [];
-  const usedPlayerIds = new Set<string>();
-  const filledSlotIndices = new Set<number>();
+  const assigned: PlayerAssignment[] = [...preAssigned];
+  const usedPlayerIds = new Set<string>(preUsedPlayerIds);
+  const filledSlotIndices = new Set<number>(preFilledSlotIndices);
 
   // Pass 1: assign players who have that position preference to a matching slot
   for (let i = 0; i < slots.length; i++) {

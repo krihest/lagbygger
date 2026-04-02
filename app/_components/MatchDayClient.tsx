@@ -66,9 +66,30 @@ export default function MatchDayClient({
 
   const playingMinutes = schedule ? getPlayingMinutes(schedule, config) : {};
   const currentOnField = liveView?.onField ?? schedule.startingLineup;
+
+  // Determine which keeper is "on duty" (in goal) right now
+  const keeperSwapMinute = schedule.keeperSwapAtMinute ?? null;
+  const elapsedMin = liveView?.elapsedMinutes ?? 0;
+  const activeKeeperId =
+    config.keeperIds?.length === 2
+      ? elapsedMin >= (keeperSwapMinute ?? Infinity)
+        ? config.keeperIds[1]
+        : config.keeperIds[0]
+      : config.keeperIds?.[0];
+
   const positionAssignments = coach
-    ? assignPositions(currentOnField, coach.players, config.formationId ?? "ingen")
+    ? assignPositions(currentOnField, coach.players, config.formationId ?? "ingen", activeKeeperId)
     : [];
+
+  // Show keeper swap alert when approaching halftime
+  const secondsUntilKeeperSwap =
+    keeperSwapMinute !== null && liveView && hasStarted && !state.isPaused
+      ? keeperSwapMinute * 60 - liveView.elapsedSeconds
+      : null;
+  const showKeeperSwapAlert =
+    secondsUntilKeeperSwap !== null &&
+    secondsUntilKeeperSwap >= 0 &&
+    secondsUntilKeeperSwap <= 60;
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-6 max-w-md mx-auto">
@@ -90,6 +111,21 @@ export default function MatchDayClient({
           {liveView ? formatTime(liveView.elapsedSeconds) : "00:00"}
         </span>
       </div>
+
+      {/* Keeper swap alert */}
+      {showKeeperSwapAlert && config.keeperIds?.length === 2 && (
+        <div className="mb-4 p-4 rounded-xl bg-sky-500/20 border border-sky-500/50 animate-pulse">
+          <p className="text-sky-300 font-bold text-sm mb-1">🧤 KEEPER-BYTTE VED HALVTID!</p>
+          <p className="text-white text-sm">
+            <span className="text-red-400 font-semibold">UT av mål: </span>
+            {playerName(config.keeperIds[0])}
+          </p>
+          <p className="text-white text-sm">
+            <span className="text-emerald-400 font-semibold">INN i mål: </span>
+            {playerName(config.keeperIds[1])}
+          </p>
+        </div>
+      )}
 
       {/* Sub Alert Banner */}
       {alertEvent && (

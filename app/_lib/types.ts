@@ -39,6 +39,7 @@ export interface MatchSchedule {
   matchConfigId: string;
   startingLineup: string[];
   events: SubEvent[];
+  keeperSwapAtMinute?: number; // halftime: keeper roles swap, nobody leaves field
 }
 
 export interface MatchState {
