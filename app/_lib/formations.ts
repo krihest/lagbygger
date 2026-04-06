@@ -101,5 +101,7 @@ export const FORMATIONS: Formation[] = [
 ];
 
 export function getFormationsForFormat(format: number): Formation[] {
-  return FORMATIONS.filter((f) => f.format === format || f.id === "ingen");
+  const ingen = FORMATIONS.filter((f) => f.id === "ingen");
+  const rest = FORMATIONS.filter((f) => f.format === format);
+  return [...ingen, ...rest];
 }

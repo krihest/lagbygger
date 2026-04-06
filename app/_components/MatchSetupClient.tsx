@@ -90,7 +90,8 @@ export default function MatchSetupClient({ coachId }: { coachId: string }) {
                 onClick={() => {
                   setFormat(f);
                   const fmts = getFormationsForFormat(f);
-                  setFormationId(fmts[0]?.id ?? "ingen");
+                  const first = fmts.find((fm) => fm.id !== "ingen") ?? fmts[0];
+                  setFormationId(first?.id ?? "ingen");
                 }}
                 className={`py-3 rounded-xl text-sm font-semibold border transition-colors ${
                   format === f
