@@ -302,9 +302,30 @@ export default function MatchDayClient({
         <h2 className="text-xs text-zinc-400 uppercase tracking-wider font-semibold mb-3">
           Bytteplan
         </h2>
-        {schedule.events.length === 0 ? (
+
+        {/* Keeper rotation card */}
+        {config.keeperIds?.length === 2 && keeperSwapMinute !== null && (
+          <div className="mb-3 px-4 py-3 rounded-xl border border-sky-500/30 bg-sky-950/20 text-sm">
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-mono font-bold text-zinc-300">
+                Keeperbytte ved {keeperSwapMinute} min
+              </span>
+              <span className="text-xs text-sky-400">🧤 Halvtid</span>
+            </div>
+            <p className="text-zinc-300">
+              <span className="text-amber-400 font-semibold">1. omgang: </span>
+              {playerName(config.keeperIds[0])}
+            </p>
+            <p className="text-zinc-300">
+              <span className="text-sky-400 font-semibold">2. omgang: </span>
+              {playerName(config.keeperIds[1])}
+            </p>
+          </div>
+        )}
+
+        {schedule.events.length === 0 && !config.keeperIds?.length ? (
           <p className="text-zinc-500 text-sm">Ingen bytter — alle spiller hele kampen.</p>
-        ) : (
+        ) : schedule.events.length === 0 ? null : (
           <div className="space-y-2">
             {schedule.events.map((evt, i) => {
               const isDone = liveView
